@@ -52,3 +52,66 @@ class Solution(object):
        return ans
 
 # optimal
+# Signature Hashing Approach for Anagram Grouping :
+# Instead of sorting the word (which takes extra time), this approach builds a frequency signature for each word. Since anagrams have exactly the same character counts, their frequency signature (hash) will also be the same. This allows efficient grouping using constant-time hash comparison.
+
+# Create a function that:
+# A frequency array of size 26 is initialized (for lowercase English letters).
+# Iterates through the word's characters, increasing the matching frequency array index.
+# Utilizing the frequency array, creates a distinct string (hash) by adding a separator (such as $) and counts to make a difference.
+
+# Sort words according to their frequency-based hash using a dictionary or map.
+# The key is a word's frequency-based hash.
+# The value is a list of words that are anagrams, or share this hash.
+
+# For every word:
+# Use the hash function to create its frequency hash.
+# To the list mapped to this hash, add the word.
+
+# Go through every entry on the map.
+# Groups of anagrams are contained in each entry; compile these groups into a final list or array.
+
+# The end result is a list of lists, with words that are anagrams of one another in each inner list.
+
+class Solution(object):
+   def getHash(self, s):
+       """
+       :type s: str
+       :rtype: str
+       """
+       freq = [0] * 26
+       for ch in s:
+           freq[ord(ch) - ord('a')] += 1
+
+
+       hash_str = ""
+       for i in range(26):
+           if freq[i] != 0:
+               hash_str += str(freq[i])
+           hash_str += "$"
+       return hash_str
+
+
+   def groupAnagrams(self, strs):
+       """
+       :type strs: List[str]
+       :rtype: List[List[str]]
+       """
+       from collections import defaultdict
+       res = []
+       mp = defaultdict(list)
+
+
+       for i in range(len(strs)):
+           key = self.getHash(strs[i])
+           mp[key].append(strs[i])
+
+
+       for group in mp.values():
+           res.append(group)
+
+
+       return res
+
+
+
