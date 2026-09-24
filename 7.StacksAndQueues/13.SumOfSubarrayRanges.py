@@ -72,3 +72,238 @@ if __name__ == "__main__":
 
 # Space Complexity: O(1), because only the answer and the running minimum and maximum values are stored.
 
+# Optimal Approach
+# The key idea is to break the range of every subarray into two separate contributions: maximum − minimum. This means we can first calculate the sum of all subarray maximums and the sum of all subarray minimums, then subtract the latter from the former. This is similar to the contribution-based technique used in Sum of Subarray Minimums.
+
+# Instead of generating every subarray, consider each element and count how many subarrays use it as the maximum or minimum. Monotonic stacks help find the nearest elements that can stop its contribution on the left and right. We use strict comparison on one side and non-strict comparison on the other so that duplicate values are assigned consistently and no subarray is counted more than once.
+
+# Algorithm
+# Create four boundary arrays to store the previous and next smaller and greater indices for every element.
+
+# Traverse from left to right using monotonic stacks to find the previous smaller-or-equal and previous greater-or-equal boundaries.
+
+# Remove equal values from the stacks while finding previous boundaries, so duplicate elements are handled consistently.
+
+# Clear both stacks and traverse from right to left to find the next smaller and next greater boundaries.
+
+# Keep equal values while finding next boundaries, completing the strict/non-strict comparison pattern needed to avoid duplicate counting.
+
+# For each index, calculate the number of possible left and right boundaries using its distances from the corresponding smaller and greater elements.
+
+# Calculate the element's contribution as a maximum using its greater boundaries and add it to the answer.
+
+# Calculate the element's contribution as a minimum using its smaller boundaries and subtract it from the answer.
+
+# Return answer, which now contains the sum of all subarray maximums minus the sum of all subarray minimums.
+
+class Solution:
+
+    # Function to find the indices of next smaller elements.
+    def findNSE(self, arr):
+        
+        # Size of array.
+        n = len(arr)
+        
+        # To store the answer.
+        ans = [0] * n
+        
+        # Stack.
+        st = []
+        
+        # Start traversing from the back.
+        for i in range(n - 1, -1, -1):
+            
+            # Get the current element.
+            currEle = arr[i]
+            
+            # Remove elements that are not smaller.
+            while st and arr[st[-1]] >= currEle:
+                st.pop()
+            
+            # Store the next smaller element index.
+            ans[i] = st[-1] if st else n
+            
+            # Push the current index into the stack.
+            st.append(i)
+        
+        # Return the answer.
+        return ans
+
+    # Function to find the indices of next greater elements.
+    def findNGE(self, arr):
+        
+        # Size of array.
+        n = len(arr)
+        
+        # To store the answer.
+        ans = [0] * n
+        
+        # Stack.
+        st = []
+        
+        # Start traversing from the back.
+        for i in range(n - 1, -1, -1):
+            
+            # Get the current element.
+            currEle = arr[i]
+            
+            # Remove elements that are not greater.
+            while st and arr[st[-1]] <= currEle:
+                st.pop()
+            
+            # Store the next greater element index.
+            ans[i] = st[-1] if st else n
+            
+            # Push the current index into the stack.
+            st.append(i)
+        
+        # Return the answer.
+        return ans
+
+    # Function to find the indices of previous smaller or equal elements.
+    def findPSEE(self, arr):
+        
+        # Size of array.
+        n = len(arr)
+        
+        # To store the answer.
+        ans = [0] * n
+        
+        # Stack.
+        st = []
+        
+        # Traverse on the array.
+        for i in range(n):
+            
+            # Get the current element.
+            currEle = arr[i]
+            
+            # Remove elements that are greater.
+            while st and arr[st[-1]] > currEle:
+                st.pop()
+            
+            # Store the previous smaller or equal index.
+            ans[i] = st[-1] if st else -1
+            
+            # Push the current index into the stack.
+            st.append(i)
+        
+        # Return the answer.
+        return ans
+
+    # Function to find the indices of previous greater or equal elements.
+    def findPGEE(self, arr):
+        
+        # Size of array.
+        n = len(arr)
+        
+        # To store the answer.
+        ans = [0] * n
+        
+        # Stack.
+        st = []
+        
+        # Traverse on the array.
+        for i in range(n):
+            
+            # Get the current element.
+            currEle = arr[i]
+            
+            # Remove elements that are smaller.
+            while st and arr[st[-1]] < currEle:
+                st.pop()
+            
+            # Store the previous greater or equal index.
+            ans[i] = st[-1] if st else -1
+            
+            # Push the current index into the stack.
+            st.append(i)
+        
+        # Return the answer.
+        return ans
+
+    # Function to find the sum of minimum values in all subarrays.
+    def sumSubarrayMins(self, arr):
+        
+        # Find the next smaller and previous smaller or equal indices.
+        nse = self.findNSE(arr)
+        psee = self.findPSEE(arr)
+        
+        # Size of array.
+        n = len(arr)
+        
+        # To store the sum.
+        total = 0
+        
+        # Traverse on the array.
+        for i in range(n):
+            
+            # Count of possible left boundaries.
+            left = i - psee[i]
+            
+            # Count of possible right boundaries.
+            right = nse[i] - i
+            
+            # Count of subarrays where current element is minimum.
+            freq = left * right
+            
+            # Contribution of the current element.
+            val = freq * arr[i]
+            
+            # Update the sum.
+            total += val
+        
+        # Return the computed sum.
+        return total
+
+    # Function to find the sum of maximum values in all subarrays.
+    def sumSubarrayMaxs(self, arr):
+        
+        # Find the next greater and previous greater or equal indices.
+        nge = self.findNGE(arr)
+        pgee = self.findPGEE(arr)
+        
+        # Size of array.
+        n = len(arr)
+        
+        # To store the sum.
+        total = 0
+        
+        # Traverse on the array.
+        for i in range(n):
+            
+            # Count of possible left boundaries.
+            left = i - pgee[i]
+            
+            # Count of possible right boundaries.
+            right = nge[i] - i
+            
+            # Count of subarrays where current element is maximum.
+            freq = left * right
+            
+            # Contribution of the current element.
+            val = freq * arr[i]
+            
+            # Update the sum.
+            total += val
+        
+        # Return the computed sum.
+        return total
+
+    # Function to find the sum of all subarray ranges.
+    def subArrayRanges(self, arr):
+        
+        # Return maximum contribution minus minimum contribution.
+        return self.sumSubarrayMaxs(arr) - self.sumSubarrayMins(arr)
+
+
+# Driver code
+arr = [1, 2, 3]
+
+# Creating an instance of Solution class.
+sol = Solution()
+
+# Function call to find the sum of subarray ranges.
+ans = sol.subArrayRanges(arr)
+
+print("The sum of subarray ranges is:", ans)
