@@ -56,3 +56,55 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+# Better Approach
+# Sorting the whole array does more work than needed because only the k largest elements matter. A min-heap of size k keeps only these useful candidates, with the smallest among them always available at the root.
+
+# Whenever the heap grows beyond k, remove its smallest value because it cannot remain among the current top k elements. After processing the complete array, the heap contains exactly the k largest occurrences, so its root is the k-th largest element.
+
+# Algorithm
+# Create an empty min-heap named minHeap so the smallest retained candidate always stays at the root.
+
+# Traverse every value in nums so each occurrence gets a chance to enter the top k.
+
+# Push the current value into minHeap because it may belong among the k largest elements.
+
+# If the heap size becomes greater than k, remove the root because the smallest candidate is no longer needed.
+
+# Keep duplicate values as separate heap entries because each occurrence has its own rank in sorted order.
+
+# After processing all elements, return the heap root because it is the smallest value among the k largest elements, making it the k-th largest.
+
+import heapq
+from typing import List
+
+
+class Solution:
+    # Finds the kth largest value with a size-k heap.
+    def findKthLargest(self, nums: List[int], k: int) -> int:
+        min_heap: List[int] = []
+
+        # Process every value as a ranked candidate.
+        for value in nums:
+            # Add the current value to the candidate heap.
+            heapq.heappush(min_heap, value)
+
+            # An overflow contains one unnecessary value.
+            if len(min_heap) > k:
+                # Remove the smallest candidate after overflow.
+                heapq.heappop(min_heap)
+
+        # The root is smallest among the top k values.
+        return min_heap[0]
+
+
+# Driver code
+def main() -> None:
+    nums = [3, 2, 3, 1, 2, 4, 5, 5, 6]
+    k = 4
+    obj = Solution()
+    print(obj.findKthLargest(nums, k))
+
+
+if __name__ == "__main__":
+    main()
