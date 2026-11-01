@@ -103,3 +103,85 @@ if __name__ == "__main__":
     # Print the updated image.
     for row in result:
         print(*row)
+
+# Approach 2
+# Breadth First Search expands the connected region iteratively using a queue. The starting cell enters the queue first, followed by every valid neighboring cell containing the original color.
+
+# Recoloring each eligible cell before queue insertion prevents duplicate entries. An early return when oldColor == newColor avoids repeated processing when recoloring cannot mark cells as visited.
+
+# Algorithm
+# Store the color of the starting cell in oldColor, allowing connected cells belonging to the original region to be recognized.
+
+# Compare oldColor with newColor. Equal values require no modification, so return the original image and avoid unnecessary queue processing.
+
+# Recolor the starting cell and add the corresponding coordinates to a queue. Recoloring before insertion marks the cell as processed.
+
+# Continue processing while the queue contains cells, ensuring that the complete connected region is explored.
+
+# Remove the front cell and examine the neighboring cells in the upward, downward, left, and right directions.
+
+# For every in-bounds neighbor containing oldColor, change the color to newColor before adding the coordinates to the queue. Early recoloring prevents duplicate queue entries.
+
+# Return the modified image after the queue becomes empty.    
+from typing import List
+from collections import deque
+
+class Solution:
+    # Applies flood fill starting from the given cell using BFS.
+    def floodFill(self, image: List[List[int]], sr: int, sc: int, color: int) -> List[List[int]]:
+        rows = len(image)
+        cols = len(image[0])
+        oldColor = image[sr][sc]
+
+        # If the new color is the same, no change is needed.
+        if oldColor == color:
+            return image
+
+        deltaRow = [-1, 1, 0, 0]
+        deltaCol = [0, 0, -1, 1]
+        q = deque()
+
+        # Recolor the starting cell.
+        image[sr][sc] = color
+
+        # Push the starting cell into the queue.
+        q.append((sr, sc))
+
+        # Recolor all connected cells having the original color.
+        while q:
+            row, col = q.popleft()
+
+            # Explore all four adjacent directions.
+            for direction in range(4):
+                nextRow = row + deltaRow[direction]
+                nextCol = col + deltaCol[direction]
+
+                # Check if the next cell is inside the image.
+                if 0 <= nextRow < rows and 0 <= nextCol < cols:
+                    # Recolor only cells that have the old color.
+                    if image[nextRow][nextCol] == oldColor:
+                        image[nextRow][nextCol] = color
+                        q.append((nextRow, nextCol))
+
+        # Return the updated image.
+        return image
+
+
+# Driver code.
+if __name__ == "__main__":
+    image = [
+        [0, 0, 0],
+        [0, 0, 0]
+    ]
+
+    sr = 0
+    sc = 0
+    color = 2
+
+    sol = Solution()
+
+    result = sol.floodFill(image, sr, sc, color)
+
+    # Print the updated image.
+    for row in result:
+        print(*row)
