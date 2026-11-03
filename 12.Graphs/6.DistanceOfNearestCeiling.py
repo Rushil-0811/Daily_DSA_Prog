@@ -153,3 +153,17 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+# Complexity Analysis
+# Time Complexity: O(N×M), where N and M are the numbers of rows and columns; every grid cell enters the queue at most once.
+
+# Space Complexity: O(N×M), where the distance matrix and BFS queue can each store up to N×M cells.
+
+# Why does BFS give the nearest distance?
+# BFS expands in layers, so the first assigned value for a cell is the minimum four-direction distance.
+
+# Why start from all one-cells?
+# All one-cells are valid nearest sources, so placing all sources in the queue computes the closest source for every cell in one traversal.
+
+# Can DFS solve the problem efficiently?
+# DFS does not naturally process distance layers, so BFS is preferred for shortest distance in an unweighted grid.
