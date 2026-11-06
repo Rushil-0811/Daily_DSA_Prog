@@ -97,3 +97,84 @@ if __name__ == "__main__":
 
     print(str(sol.isCyclic(vertices, adj)).lower())
 
+# Complexity Analysis
+# Time Complexity: O(V+E), where V and E are the numbers of vertices and directed edges; DFS processes every vertex and edge once.
+
+# Space Complexity: O(V), where both visited arrays and the recursive DFS stack store a number of entries proportional to V.
+
+# Approach 2
+# Kahn’s Algorithm applies topological-sorting logic to detect a cycle. In a directed acyclic graph, repeated removal of vertices having indegree 0 eventually processes every vertex.
+
+# Vertices belonging to a directed cycle never reach indegree 0 because every cycle vertex retains an incoming edge. A processed count smaller than V therefore confirms a cycle.
+
+# Algorithm
+# Initialize an indegree array of size V, where each entry stores the number of incoming edges for a vertex.
+
+# Scan every directed edge and increment the indegree of the destination vertex, preparing the dependency count required by Kahn’s Algorithm.
+
+# Add all vertices having indegree 0 to a queue, since such vertices have no unresolved incoming dependencies.
+
+# Initialize processedCount to 0 and continue processing while the queue contains vertices.
+
+# Remove the front vertex and increment processedCount, recording successful removal from the topological ordering.
+
+# Decrease the indegree of every outgoing neighbor and add a neighbor to the queue when the indegree becomes 0.
+
+# Return true when processedCount differs from V; otherwise, return false because all vertices formed a valid topological order.
+
+from typing import List
+from collections import deque
+
+class Solution:
+    # Detects a cycle using Kahn's Algorithm.
+    def isCyclic(self, vertices: int, adj: List[List[int]]) -> bool:
+        indegree = [0] * vertices
+
+        # Compute indegree for every vertex.
+        for node in range(vertices):
+            for neighbor in adj[node]:
+                indegree[neighbor] += 1
+
+        q = deque()
+
+        # Add all vertices with zero indegree.
+        for node in range(vertices):
+            # Zero indegree means this node can be processed first.
+            if indegree[node] == 0:
+                q.append(node)
+
+        processed = 0
+
+        # Remove zero-indegree vertices one by one.
+        while q:
+            node = q.popleft()
+
+            # Count this node as processed.
+            processed += 1
+
+            # Reduce indegree of outgoing neighbors.
+            for neighbor in adj[node]:
+                indegree[neighbor] -= 1
+
+                # If indegree becomes zero, add it to the queue.
+                if indegree[neighbor] == 0:
+                    q.append(neighbor)
+
+        # If some vertices remain unprocessed, a cycle exists.
+        return processed != vertices
+
+
+# Driver code.
+if __name__ == "__main__":
+    vertices = 4
+
+    adj = [
+        [1, 2],
+        [2],
+        [3],
+        []
+    ]
+
+    sol = Solution()
+
+    print(str(sol.isCyclic(vertices, adj)).lower())
