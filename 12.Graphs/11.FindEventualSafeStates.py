@@ -117,3 +117,75 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
+# Complexity Analysis
+# Time Complexity: O(V+E), where V and E are the numbers of nodes and directed edges; DFS processes every node and edge once.
+
+# Space Complexity: O(V), where the state arrays and recursive DFS stack store a number of entries proportional to V.
+
+# Approach 2
+# Reverse Kahn’s Algorithm begins from terminal nodes, which are safe because no outgoing paths exist. Reversing every directed edge allows safe-state propagation from terminal nodes toward predecessors.
+
+# The outdegree of a predecessor decreases whenever one outgoing neighbor is proven safe. An outdegree of 0 confirms that every outgoing path leads to a safe node.
+
+# Algorithm
+# Build a reverse adjacency list and compute the original outdegree of every node, allowing safe states to propagate toward predecessors.
+
+# Add all nodes having outdegree 0 to a queue, since terminal nodes are safe by definition.
+
+# Initialize a safe array to record every node proven to have no path leading to a directed cycle.
+
+# Continue processing while the queue contains nodes, removing the front node and marking the node safe.
+
+# Traverse every predecessor in the reverse graph and decrease the predecessor’s outdegree, representing one outgoing path proven safe.
+
+# Add a predecessor to the queue when the outdegree becomes 0, as all outgoing paths now lead to safe nodes.
+
+# Scan nodes from 0 to V-1, collect all marked nodes, and return the resulting ascending list.
+
+from collections import deque
+from typing import Deque, List
+
+class Solution:
+    # Function to find safe nodes using reverse Kahn BFS.
+    def eventualSafeNodes(self, graph: List[List[int]]) -> List[int]:
+        vertices = len(graph)
+        reverse_graph = [[] for _ in range(vertices)]
+        outdegree = [0] * vertices
+
+        # Reverse edges and count original outgoing edges.
+        for node in range(vertices):
+            outdegree[node] = len(graph[node])
+            for neighbor in graph[node]:
+                reverse_graph[neighbor].append(node)
+
+        queue: Deque[int] = deque()
+
+        # Terminal nodes are safe starting points.
+        for node in range(vertices):
+            if outdegree[node] == 0:
+                queue.append(node)
+
+        safe: List[int] = []
+
+        # Remove safe terminal paths from predecessors.
+        while queue:
+            node = queue.popleft()
+            safe.append(node)
+
+            for predecessor in reverse_graph[node]:
+                outdegree[predecessor] -= 1
+                if outdegree[predecessor] == 0:
+                    queue.append(predecessor)
+
+        safe.sort()
+        return safe
+
+# Driver code.
+def main() -> None:
+    graph = [[1, 2], [2, 3], [5], [0], [5], [], []]
+
+    sol = Solution()
+    print(sol.eventualSafeNodes(graph))
+
+if __name__ == "__main__":
+    main()
