@@ -105,3 +105,83 @@ if __name__ == "__main__":
 
     print(str(sol.canFinish(numCourses, prerequisites)).lower())
 
+# Approach 2
+# Kahn Algorithm treats courses with indegree 0 as immediately available because no prerequisites block them. Completing such a course removes outgoing dependency effect from dependent courses.
+
+# If all courses can be processed through repeated zero-indegree removal, no cycle exists. If some courses never reach indegree 0, a circular dependency remains.
+
+# Algorithm
+# Build an adjacency list and an indegree array from all prerequisite pairs.
+
+# Add every course with indegree = 0 to a queue.
+
+# Initialize completed as 0.
+
+# Pop a course from the queue and increase completed.
+
+# Reduce the indegree of every dependent course.
+
+# Add a dependent course to the queue when its indegree becomes 0.
+
+# Continue until the queue becomes empty.
+
+# Return true if completed == numCourses; otherwise, return false.
+
+from typing import List
+from collections import deque
+
+class Solution:
+    # Checks if all courses can be finished using Kahn's Algorithm.
+    def canFinish(self, numCourses: int, prerequisites: List[List[int]]) -> bool:
+        adj = [[] for _ in range(numCourses)]
+        indegree = [0] * numCourses
+
+        # Build graph and indegree from prerequisites.
+        for pairValue in prerequisites:
+            course = pairValue[0]
+            prerequisite = pairValue[1]
+
+            adj[prerequisite].append(course)
+            indegree[course] += 1
+
+        q = deque()
+
+        # Add courses with no prerequisites.
+        for course in range(numCourses):
+            # Zero indegree means this course can be completed now.
+            if indegree[course] == 0:
+                q.append(course)
+
+        completed = 0
+
+        # Complete courses in prerequisite-safe order.
+        while q:
+            course = q.popleft()
+
+            # Count the current course as completed.
+            completed += 1
+
+            # Remove current course as prerequisite for dependent courses.
+            for nextCourse in adj[course]:
+                indegree[nextCourse] -= 1
+
+                # If all prerequisites are done, add this course.
+                if indegree[nextCourse] == 0:
+                    q.append(nextCourse)
+
+        # All courses are possible only when all get completed.
+        return completed == numCourses
+
+
+# Driver code.
+if __name__ == "__main__":
+    numCourses = 2
+
+    prerequisites = [
+        [1, 0],
+        [0, 1]
+    ]
+
+    sol = Solution()
+
+    print(str(sol.canFinish(numCourses, prerequisites)).lower())
