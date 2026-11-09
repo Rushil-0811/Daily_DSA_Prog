@@ -93,3 +93,76 @@ def main() -> None:
 if __name__ == "__main__":
     main()
 
+# Approach 2
+# Kahn’s Algorithm begins with all courses having indegree 0, since such courses have no pending prerequisites. Every removed course is appended directly to the resulting course order.
+
+# Processing a course reduces the indegree of all dependent courses. A dependent course enters the queue only after all prerequisites have been processed. An incomplete final order indicates a cycle.
+
+# Algorithm
+# Build an adjacency list and indegree array from all prerequisite pairs, storing the dependency graph and incoming-edge count of every course.
+
+# Add every course having indegree 0 to a queue, since such courses can be completed immediately.
+
+# Initialize an empty order list to store courses in valid prerequisite order.
+
+# Continue processing while the queue contains courses, removing the front course and appending the course to the order.
+
+# Reduce the indegree of every dependent course, representing the completion of one required prerequisite.
+
+# Add a dependent course to the queue when the indegree becomes 0, indicating that all prerequisites have been completed.
+
+# Return the order when the list contains V courses; otherwise, return an empty array because a cycle prevents completion.
+
+# Note: Multiple valid course orders can exist. DFS and Kahn’s Algorithm may return different orders, but every order is correct when each prerequisite appears before the corresponding dependent course.
+# A cycle makes course completion impossible: DFS detects an active-path vertex, while Kahn’s Algorithm processes fewer than V courses. Both approaches return an empty array when a cycle exists.
+
+from collections import deque
+from typing import Deque, List
+
+class Solution:
+    # Function to return a valid course order.
+    def findOrder(self, numCourses: int, prerequisites: List[List[int]]) -> List[int]:
+        adj = [[] for _ in range(numCourses)]
+        indegree = [0] * numCourses
+
+        # Build graph and indegree from prerequisites.
+        for course, prerequisite in prerequisites:
+            adj[prerequisite].append(course)
+            indegree[course] += 1
+
+        queue: Deque[int] = deque()
+
+        # Add courses with no prerequisites.
+        for course in range(numCourses):
+            if indegree[course] == 0:
+                queue.append(course)
+
+        order: List[int] = []
+
+        # Process courses in prerequisite-safe order.
+        while queue:
+            course = queue.popleft()
+            order.append(course)
+
+            # Remove current course as prerequisite for dependent courses.
+            for next_course in adj[course]:
+                indegree[next_course] -= 1
+                if indegree[next_course] == 0:
+                    queue.append(next_course)
+
+        # Cycle exists when not all courses are processed.
+        if len(order) != numCourses:
+            return []
+
+        return order
+
+# Driver code.
+def main() -> None:
+    numCourses = 4
+    prerequisites = [[1, 0], [2, 0], [3, 1], [3, 2]]
+
+    sol = Solution()
+    print(sol.findOrder(numCourses, prerequisites))
+
+if __name__ == "__main__":
+    main()
