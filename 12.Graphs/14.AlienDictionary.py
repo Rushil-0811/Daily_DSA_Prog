@@ -110,3 +110,99 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+# Complexity Analysis
+# Time Complexity: O(C+U+E×log U) with ordered set or TreeSet adjacency, where C, U, and E denote input characters, unique characters, and extracted precedence relations; hash sets reduce the average bound to O(C+U+E).
+
+# Space Complexity: O(U+E), where the graph stores character nodes and precedence edges, while the state map, recursion stack, and answer require O(U) space.
+
+# Approach 2
+# Kahn’s Algorithm creates a topological ordering using character indegrees. Every character having indegree 0 has no unresolved precedence requirement and can appear next in the alien alphabet order.
+
+# Processing a character reduces the indegrees of outgoing neighbors. An answer containing fewer than all unique characters indicates a cycle, while ignoring duplicate edges prevents incorrect indegree values.
+
+# Algorithm
+# Initialize a graph and indegree map for every unique character, ensuring inclusion of characters having no precedence relations.
+
+# Compare every adjacent word pair and return an empty string for an invalid prefix case involving a longer earlier word and an identical shorter prefix.
+
+# Add an edge only for the first mismatching character pair and increase the destination indegree only when the edge is new.
+
+# Add every character having indegree 0 to a queue, since no preceding character is required.
+
+# Remove characters from the queue, append each character to the answer, and reduce outgoing-neighbor indegrees, adding a neighbor when the indegree becomes 0.
+
+# Return an empty string when the answer contains fewer than U characters; otherwise, return the completed alien alphabet order.
+
+# Note: Multiple valid alien alphabet orders may exist for some inputs. DFS and Kahn’s Algorithm can produce different correct orders as long as every extracted precedence relation is satisfied. An invalid prefix or directed cycle produces an empty string.
+
+from collections import deque
+from typing import Dict, List, Set
+
+
+class Solution:
+    # Return a valid alien character order or empty string for invalid data.
+    def alienOrder(self, words: List[str]) -> str:
+        graph: Dict[str, Set[str]] = {}
+        indegree: Dict[str, int] = {}
+
+        # Create graph node and indegree entry for every character.
+        for word in words:
+            for symbol in word:
+                graph.setdefault(symbol, set())
+                indegree[symbol] = 0
+
+        # Build directed rules from adjacent sorted words.
+        for word_index in range(len(words) - 1):
+            first = words[word_index]
+            second = words[word_index + 1]
+            min_length = min(len(first), len(second))
+
+            # Longer word before equal prefix creates invalid order.
+            if len(first) > len(second) and first[:min_length] == second:
+                return ""
+
+            # Add one unique edge from first mismatch.
+            for pos in range(min_length):
+                if first[pos] != second[pos]:
+                    if second[pos] not in graph[first[pos]]:
+                        graph[first[pos]].add(second[pos])
+                        indegree[second[pos]] += 1
+                    break
+
+        q = deque()
+
+        # Push all characters without prerequisites.
+        for symbol, degree in indegree.items():
+            if degree == 0:
+                q.append(symbol)
+
+        order: List[str] = []
+
+        # Remove zero-indegree characters level by level.
+        while q:
+            node = q.popleft()
+            order.append(node)
+
+            # Reduce indegree for every dependent character.
+            for next_char in graph[node]:
+                indegree[next_char] -= 1
+                if indegree[next_char] == 0:
+                    q.append(next_char)
+
+        # Missing characters in order means cycle.
+        if len(order) != len(indegree):
+            return ""
+
+        return "".join(order)
+
+
+# Driver code.
+def main() -> None:
+    words = ["wrt", "wrf", "er", "ett", "rftt"]
+    sol = Solution()
+    print(sol.alienOrder(words))
+
+
+if __name__ == "__main__":
+    main()
