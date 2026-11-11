@@ -36,7 +36,7 @@
 
 # Replace all remaining infinity values with -1 and return the distance array, marking every unreachable vertex explicitly.
 
-from typing import List, Tuple
+from typing import List, Tuple, Deque
 
 
 class Solution:
@@ -106,6 +106,118 @@ def main() -> None:
     ]
     sol = Solution()
     print(sol.shortestPath(V, E, edges))
+
+
+if __name__ == "__main__":
+    main()
+
+# BFS Approach
+# In a directed acyclic graph, every edge goes from an earlier vertex to a later vertex in some topological ordering. That ordering is the key reason shortest paths can be found without repeatedly revisiting vertices.
+
+# Kahn's algorithm creates this ordering using indegree counts. Vertices with no remaining incoming dependency are processed first, and removing them gradually exposes the next safe vertices.
+
+# After the order is ready, the distance of each vertex is finalized enough to pass its value forward. Every outgoing edge can then improve the neighbor's distance. Since edges only move forward in the ordering, a later vertex never needs to affect an earlier one.
+
+# Algorithm
+# Build an adjacency list from the edge list, and store each outgoing neighbor with its edge weight.
+
+# Compute the indegree of every vertex, then place all zero-indegree vertices into a queue.
+
+# Repeatedly remove a vertex from the queue, append it to the topological order, reduce the indegree of its outgoing neighbors, and enqueue any neighbor whose indegree becomes zero.
+
+# Initialize all distances as unreachable, then set the distance of source vertex 0 to 0; if no other vertex can be reached, these unreachable markers remain unchanged.
+
+# Traverse the topological order and skip vertices that are still unreachable; for every reachable vertex, relax all outgoing edges.
+
+# Convert every remaining unreachable distance to -1 and return the final distance array.
+
+from typing import Deque
+
+class Solution:
+    # Returns shortest distances from source vertex 0.
+    def shortest_path(self, V: int, E: int, edges: list[list[int]]) -> list[int]:
+        adjacency: list[list[tuple[int, int]]] = [[] for _ in range(V)]
+        indegree: list[int] = [0] * V
+
+        # Build adjacency list and indegree values from the directed edges.
+        for index in range(E):
+            u: int = edges[index][0]
+            v: int = edges[index][1]
+            weight: int = edges[index][2]
+
+            adjacency[u].append((v, weight))
+            indegree[v] += 1
+
+        nodes: Deque[int] = Deque()
+
+        # Add every vertex that has no incoming edge.
+        for node in range(V):
+            # Zero-indegree vertices can start the topological ordering.
+            if indegree[node] == 0:
+                nodes.append(node)
+
+        topo: list[int] = []
+
+        # Remove vertices in BFS order while their outgoing edges reduce indegrees.
+        while nodes:
+            node: int = nodes.popleft()
+            topo.append(node)
+
+            for next_node, _ in adjacency[node]:
+                indegree[next_node] -= 1
+
+                # A neighbor becomes ready when all incoming dependencies are removed.
+                if indegree[next_node] == 0:
+                    nodes.append(next_node)
+
+        INF: int = 10**18
+        dist: list[int] = [INF] * V
+        dist[0] = 0
+
+        # Relax edges only after the source distance to a vertex is known.
+        for node in topo:
+            # Unreachable vertices cannot improve any neighbor.
+            if dist[node] == INF:
+                continue
+
+            for next_node, weight in adjacency[node]:
+                # A shorter path through the current vertex replaces the old distance.
+                if dist[node] + weight < dist[next_node]:
+                    dist[next_node] = dist[node] + weight
+
+        answer: list[int] = [-1] * V
+
+        for node in range(V):
+            # Reachable vertices keep their computed shortest distance.
+            if dist[node] != INF:
+                answer[node] = dist[node]
+
+        return answer
+
+
+# Returns values as a space-separated string.
+def join_values(values: list[int]) -> str:
+    return " ".join(str(value) for value in values)
+
+
+# Driver code
+def main() -> None:
+    V: int = 6
+    E: int = 7
+    edges: list[list[int]] = [
+        [0, 1, 2],
+        [0, 4, 1],
+        [1, 2, 3],
+        [4, 2, 2],
+        [4, 5, 4],
+        [2, 3, 6],
+        [5, 3, 1],
+    ]
+
+    # instance for class Solution
+    sol: Solution = Solution()
+    answer: list[int] = sol.shortest_path(V, E, edges)
+    print(join_values(answer))
 
 
 if __name__ == "__main__":
