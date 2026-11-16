@@ -200,3 +200,58 @@ if __name__ == "__main__":
 
 # Return 0 only as a defensive fallback after heap exhaustion. The fallback is never reached for a valid non-empty rectangular grid, because every cell is reachable through orthogonal moves.
 
+import heapq
+from typing import List, Tuple
+
+
+class Solution:
+    # Return minimum possible maximum adjacent height difference.
+    def minimumEffortPath(self, heights: List[List[int]]) -> int:
+        rows = len(heights)
+        cols = len(heights[0])
+        effort = [[float("inf")] * cols for _ in range(rows)]
+        min_heap: List[Tuple[int, int, int]] = [(0, 0, 0)]
+        effort[0][0] = 0
+        directions = [(-1, 0), (0, 1), (1, 0), (0, -1)]
+
+        # Process cells by smallest known route effort.
+        while min_heap:
+            current_effort, row, col = heapq.heappop(min_heap)
+
+            # Skip an outdated heap state.
+            if current_effort != effort[row][col]:
+                continue
+
+            # Destination effort is final after extraction.
+            if row == rows - 1 and col == cols - 1:
+                return current_effort
+
+            # Relax all four neighboring cells.
+            for add_row, add_col in directions:
+                next_row = row + add_row
+                next_col = col + add_col
+                if not (0 <= next_row < rows and 0 <= next_col < cols):
+                    continue
+
+                edge_effort = abs(
+                    heights[row][col] - heights[next_row][next_col]
+                )
+                candidate = max(current_effort, edge_effort)
+                if candidate < effort[next_row][next_col]:
+                    effort[next_row][next_col] = candidate
+                    heapq.heappush(
+                        min_heap, (candidate, next_row, next_col)
+                    )
+
+        return 0
+
+
+# Driver code.
+def main() -> None:
+    heights = [[1, 2, 2], [3, 8, 2], [5, 3, 5]]
+    sol = Solution()
+    print(sol.minimumEffortPath(heights))
+
+
+if __name__ == "__main__":
+    main()
