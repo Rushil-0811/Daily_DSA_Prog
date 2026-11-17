@@ -91,3 +91,95 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+# Approach 2
+# State-aware Dijkstra treats {flightsUsed, city} as the complete state. Reaching the same city with different flight counts creates different remaining possibilities, so a city-only distance array is insufficient.
+
+# A min-heap processes the lowest-cost valid state first. Non-negative flight prices make the first destination state removed from the heap the cheapest valid route.
+
+# Algorithm
+# Build a directed weighted adjacency list from all flights, storing each destination city with the corresponding price.
+
+# Initialize a best table with K+2 flight layers and N cities, where every entry initially contains infinity.
+
+# Set best[0][source]=0 and insert {0, source, 0} into a min-heap, representing zero price with no flights used.
+
+# Continue processing while the heap contains states, remove the state having the smallest price, and skip stale entries that differ from the matching table value.
+
+# Return the current price when the removed city is the destination, as no cheaper valid state remains in the min-heap.
+
+# When fewer than K+1 flights have been used, relax every outgoing flight into the next layer and insert each improved state into the heap.
+
+# Return -1 when the heap becomes empty without reaching the destination within the allowed flight count.
+
+from typing import List
+import heapq
+
+class Solution:
+    # Returns the cheapest price using at most k stops.
+    def findCheapestPrice(self, n: int, flights: List[List[int]], src: int, dst: int, k: int) -> int:
+        # Build the directed weighted adjacency list.
+        adjacency = [[] for _ in range(n)]
+
+        for flight in flights:
+            adjacency[flight[0]].append((flight[1], flight[2]))
+
+        # Infinity marks unreachable states.
+        INF = float("inf")
+        maxFlights = k + 1
+
+        # Store the best price for every flight-count and city state.
+        best = [[INF] * n for _ in range(maxFlights + 1)]
+
+        # Process states by increasing total price.
+        minHeap = []
+
+        # Start from source with zero flights and zero price.
+        best[0][src] = 0
+        heapq.heappush(minHeap, (0, src, 0))
+
+        while minHeap:
+            cost, city, used = heapq.heappop(minHeap)
+
+            # Skip states replaced by cheaper matching states.
+            if cost != best[used][city]:
+                continue
+
+            # Destination popped first is the cheapest valid answer.
+            if city == dst:
+                return cost
+
+            # Stop paths exceeding k + 1 flights.
+            if used == maxFlights:
+                continue
+
+            # Relax outgoing flights into the next layer.
+            for neighbor, price in adjacency[city]:
+                nextUsed = used + 1
+                nextCost = cost + price
+
+                # Update only when the new price is cheaper.
+                if nextCost < best[nextUsed][neighbor]:
+                    best[nextUsed][neighbor] = nextCost
+                    heapq.heappush(minHeap, (nextCost, neighbor, nextUsed))
+
+        # Return -1 when destination cannot be reached.
+        return -1
+
+
+# Driver code.
+def main() -> None:
+    n = 4
+
+    flights = [
+        [0, 1, 100], [1, 2, 100], [2, 0, 100],
+        [1, 3, 600], [2, 3, 200]
+    ]
+
+    solution = Solution()
+
+    print(solution.findCheapestPrice(n, flights, 0, 3, 1))
+
+
+if __name__ == "__main__":
+    main()
