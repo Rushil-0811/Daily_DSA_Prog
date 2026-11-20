@@ -136,3 +136,78 @@ if __name__ == "__main__":
 
 # Return the final answer after all source cities have been processed.
 
+import heapq
+from typing import List, Tuple
+
+
+class Solution:
+    # Return the greatest-index city among minimum reachable counts.
+    def findTheCity(
+        self,
+        n: int,
+        edges: List[List[int]],
+        distanceThreshold: int,
+    ) -> int:
+        adj: List[List[Tuple[int, int]]] = [[] for _ in range(n)]
+
+        # Build the undirected weighted adjacency list.
+        for first, second, weight in edges:
+            adj[first].append((second, weight))
+            adj[second].append((first, weight))
+
+        best_count = n
+        answer = -1
+
+        # Run threshold-limited Dijkstra from every city.
+        for source in range(n):
+            dist = [float("inf")] * n
+            min_heap: List[Tuple[int, int]] = []
+            dist[source] = 0
+            heapq.heappush(min_heap, (0, source))
+            count = 0
+
+            # Process reachable cities in increasing distance.
+            while min_heap:
+                current_distance, city = heapq.heappop(min_heap)
+
+                # Skip an entry replaced by a shorter route.
+                if current_distance != dist[city]:
+                    continue
+
+                # Stop after crossing the allowed threshold.
+                if current_distance > distanceThreshold:
+                    break
+
+                if city != source:
+                    count += 1
+
+                # Relax every adjacent road within the threshold.
+                for neighbor, weight in adj[city]:
+                    candidate = current_distance + weight
+                    if (
+                        candidate <= distanceThreshold
+                        and candidate < dist[neighbor]
+                    ):
+                        dist[neighbor] = candidate
+                        heapq.heappush(min_heap, (candidate, neighbor))
+
+            # Replace equal counts to preserve the greatest index.
+            if count <= best_count:
+                best_count = count
+                answer = source
+
+        return answer
+
+
+# Driver code.
+def main() -> None:
+    n = 4
+    edges = [
+        [0, 1, 3], [1, 2, 1], [1, 3, 4], [2, 3, 1]
+    ]
+    sol = Solution()
+    print(sol.findTheCity(n, edges, 4))
+
+
+if __name__ == "__main__":
+    main()
