@@ -105,3 +105,87 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+# Approach 2
+# The parent forest and path-compressed findParent operation remain unchanged. A component-size array stores the number of nodes belonging to each current representative.
+
+# unionBySize attaches the smaller set below the larger set. The surviving representative receives the combined component size, allowing componentSizeOf(node) to return set cardinality directly.
+
+# Algorithm
+# Initialize parent[node]=node, rankValue[node]=0, and componentSize[node]=1 for every node.
+
+# Run findParent(node) until reaching a root and compress the complete parent path during return.
+
+# Run findParent for both nodes before unionBySize and stop after matching representatives.
+
+# Compare both component sizes and swap representatives after locating a larger second component.
+
+# Attach the smaller representative below the larger representative.
+
+# Add the absorbed component size to the surviving representative and preserve a valid rank upper bound.
+
+# Run find(u, v) through representative comparison and run componentSizeOf(node) through the representative size.
+
+class DisjointSet:
+    # Initializes one independent set for every node.
+    def __init__(self, n: int) -> None:
+        self.parent = [0] * (n + 1)
+        self.componentSize = [1] * (n + 1)
+
+        # Make every node its own parent.
+        for node in range(1, n + 1):
+            self.parent[node] = node
+
+    # Returns the representative using path compression.
+    def findParent(self, node: int) -> int:
+        # Base case: node is its own representative.
+        if self.parent[node] == node:
+            return node
+
+        # Compress the path while finding the representative.
+        self.parent[node] = self.findParent(self.parent[node])
+
+        return self.parent[node]
+
+    # Merges two sets using component-size balancing.
+    def unionBySize(self, u: int, v: int) -> None:
+        rootU = self.findParent(u)
+        rootV = self.findParent(v)
+
+        # Same representative means both nodes are already connected.
+        if rootU == rootV:
+            return
+
+        # Keep the larger component as the main parent.
+        if self.componentSize[rootU] < self.componentSize[rootV]:
+            rootU, rootV = rootV, rootU
+
+        # Attach the smaller component to the larger component.
+        self.parent[rootV] = rootU
+
+        # Update the size of the merged component.
+        self.componentSize[rootU] += self.componentSize[rootV]
+
+    # Checks whether two nodes share one set.
+    def find(self, u: int, v: int) -> bool:
+        return self.findParent(u) == self.findParent(v)
+
+    # Returns the number of nodes in one set.
+    def componentSizeOf(self, node: int) -> int:
+        return self.componentSize[self.findParent(node)]
+
+
+# Driver code.
+def main() -> None:
+    dsu = DisjointSet(5)
+
+    dsu.unionBySize(1, 2)
+    dsu.unionBySize(4, 5)
+    dsu.unionBySize(2, 4)
+
+    print(str(dsu.find(1, 5)).lower())
+    print(dsu.componentSizeOf(1))
+
+
+if __name__ == "__main__":
+    main()
