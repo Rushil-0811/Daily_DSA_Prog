@@ -104,3 +104,101 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# Optimal Approach 1
+# Every existing island receives a unique identifier, starting from 2 to avoid conflict with the original water value 0 and land value 1. DFS replaces each island cell with the identifier and records the corresponding area.
+
+# For every water cell, a set collects unique neighboring island identifiers. Adding the areas of such islands with one converted cell produces the largest island obtainable from the candidate flip.
+
+# Algorithm
+# Initialize the island identifier to 2, an area map for storing island sizes, and a maximum-area variable for tracking the answer.
+
+# Traverse the grid and start DFS from every cell containing 1, allowing each unprocessed island to be discovered independently.
+
+# During DFS, replace every connected land cell with the current island identifier and count the visited cells, permanently labeling the complete component.
+
+# Store the calculated area against the island identifier and increment the identifier for the next island.
+
+# Traverse every water cell and collect the identifiers of adjacent islands in a set, preventing the same island from being counted through multiple neighboring cells.
+
+# Calculate the candidate area as 1 for the converted cell plus the stored areas of all unique neighboring islands, then update the maximum area.
+
+# Return N×N when the grid contains no water; otherwise, return the maximum candidate area.
+
+from typing import List, Dict, Set
+
+class Solution:
+    # Function to find largest island using component labels.
+    def largestIsland(self, grid: List[List[int]]) -> int:
+        n = len(grid)
+        areaById: Dict[int, int] = {}
+        islandId = 2
+        answer = 0
+        hasZero = False
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+
+        # Function to label one island and return area.
+        def dfs(row: int, col: int, islandId: int) -> int:
+            # Stop for invalid cells and non-land cells.
+            if row < 0 or col < 0 or row >= n or col >= n or grid[row][col] != 1:
+                return 0
+
+            # Replace land with island id.
+            grid[row][col] = islandId
+
+            # Count current cell and all connected land cells.
+            area = 1
+            area += dfs(row - 1, col, islandId)
+            area += dfs(row + 1, col, islandId)
+            area += dfs(row, col - 1, islandId)
+            area += dfs(row, col + 1, islandId)
+            return area
+
+        # Label every existing island with a unique id.
+        for row in range(n):
+            for col in range(n):
+                if grid[row][col] == 1:
+                    area = dfs(row, col, islandId)
+                    areaById[islandId] = area
+                    answer = max(answer, area)
+                    islandId += 1
+
+        # Try every zero and merge unique neighboring islands.
+        for row in range(n):
+            for col in range(n):
+                if grid[row][col] != 0:
+                    continue
+
+                hasZero = True
+                seen: Set[int] = set()
+                mergedArea = 1
+
+                for addRow, addCol in directions:
+                    nextRow = row + addRow
+                    nextCol = col + addCol
+
+                    if 0 <= nextRow < n and 0 <= nextCol < n and grid[nextRow][nextCol] > 1:
+                        seen.add(grid[nextRow][nextCol])
+
+                for island in seen:
+                    mergedArea += areaById[island]
+
+                answer = max(answer, mergedArea)
+
+        # Return full grid area when no zero exists.
+        if not hasZero:
+            return n * n
+
+        # Return maximum possible island area.
+        return answer
+
+# Driver code.
+def main() -> None:
+    grid = [[1, 1], [1, 0]]
+
+    sol = Solution()
+    print(sol.largestIsland(grid))
+
+if __name__ == "__main__":
+    main()
