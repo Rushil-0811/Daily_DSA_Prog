@@ -202,3 +202,110 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
+
+
+# Optimal Approach 2
+# Disjoint Set Union groups adjacent land cells into connected components before evaluating any flip. A cell at row r and column c maps to the one-dimensional identifier r×N+c.
+
+# For every water cell, a set stores the unique representatives of neighboring land components. The potential island area equals one converted cell plus the sizes of all distinct neighboring components.
+
+# Algorithm
+# Initialize DSU parent and size arrays for all N×N cells, along with four-direction arrays for adjacent-cell traversal.
+
+# Traverse every grid cell, map (row, col) to row×N+col, and record the presence of water while skipping union operations for water cells.
+
+# For every land cell, inspect all four directions and merge every valid neighboring land cell. Duplicate connection checks remain harmless because unite returns when both nodes already share a representative.
+
+# Return N×N when no water cell exists, as the entire grid already forms the largest possible island.
+
+# Traverse every water cell and collect the DSU representatives of all four neighboring land cells in a set, preventing duplicate component counting.
+
+# Calculate the candidate area as 1 plus the sizes of all unique neighboring components, then update the maximum area.
+
+# Return the largest candidate area after every water cell has been evaluated.
+
+from typing import List, Set
+
+class Solution:
+    # Function to find largest island using DSU.
+    def largestIsland(self, grid: List[List[int]]) -> int:
+        n = len(grid)
+        total = n * n
+        parent = [node for node in range(total)]
+        size = [1] * total
+        directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+        hasZero = False
+
+        # Function to find representative with path compression.
+        def findParent(node: int) -> int:
+            if parent[node] == node:
+                return node
+            parent[node] = findParent(parent[node])
+            return parent[node]
+
+        # Function to merge two land components.
+        def unite(first: int, second: int) -> None:
+            parentFirst = findParent(first)
+            parentSecond = findParent(second)
+
+            if parentFirst == parentSecond:
+                return
+
+            if size[parentFirst] < size[parentSecond]:
+                parentFirst, parentSecond = parentSecond, parentFirst
+
+            parent[parentSecond] = parentFirst
+            size[parentFirst] += size[parentSecond]
+
+        # Merge adjacent land cells.
+        for row in range(n):
+            for col in range(n):
+                if grid[row][col] == 0:
+                    hasZero = True
+                    continue
+
+                current = row * n + col
+                for addRow, addCol in directions:
+                    nextRow = row + addRow
+                    nextCol = col + addCol
+
+                    if 0 <= nextRow < n and 0 <= nextCol < n and grid[nextRow][nextCol] == 1:
+                        unite(current, nextRow * n + nextCol)
+
+        if not hasZero:
+            return total
+
+        answer = 1
+
+        # Try every zero and combine neighboring DSU components.
+        for row in range(n):
+            for col in range(n):
+                if grid[row][col] != 0:
+                    continue
+
+                seen: Set[int] = set()
+                mergedArea = 1
+
+                for addRow, addCol in directions:
+                    nextRow = row + addRow
+                    nextCol = col + addCol
+
+                    if 0 <= nextRow < n and 0 <= nextCol < n and grid[nextRow][nextCol] == 1:
+                        seen.add(findParent(nextRow * n + nextCol))
+
+                for root in seen:
+                    mergedArea += size[root]
+
+                answer = max(answer, mergedArea)
+
+        return answer
+
+# Driver code.
+def main() -> None:
+    grid = [[1, 1], [1, 1]]
+
+    sol = Solution()
+    print(sol.largestIsland(grid))
+
+if __name__ == "__main__":
+    main()
